@@ -185,6 +185,28 @@ canvas {
   letter-spacing: -0.04em;
 }
 
+.cm-status__value--energy {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.cm-status__energy-number {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--cm-green);
+  font-style: italic;
+}
+
+.cm-status__energy-unit {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.9;
+  font-style: italic;
+}
+
 .cm-status__value span {
   font-size: 10px;
   font-weight: 400;
@@ -260,6 +282,10 @@ canvas {
   height: 100%;
 }
 
+.cm-main-view--upgrades {
+  animation: fadeIn 500ms ease;
+}
+
 .cm-main-view--archive {
   animation: fadeIn 500ms ease;
 }
@@ -297,6 +323,24 @@ canvas {
   overflow-y: auto;
   padding-right: 12px;
   padding-bottom: 128px;
+}
+
+.cm-terminal-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cm-terminal-layout .cm-scroll {
+  padding-bottom: 24px;
+}
+
+.cm-terminal-action-slot {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(74, 246, 38, 0.1);
+  background: linear-gradient(180deg, rgba(10, 15, 10, 0), rgba(10, 15, 10, 0.92) 20%);
 }
 
 .cm-stage-summary {
@@ -518,6 +562,10 @@ canvas {
   opacity: 0.76;
 }
 
+.cm-upgrade-scroll {
+  padding-bottom: 32px;
+}
+
 .cm-blocked p {
   margin: 0 0 12px;
   line-height: 1.6;
@@ -536,13 +584,7 @@ canvas {
 }
 
 .cm-decode-panel {
-  position: absolute;
-  left: 24px;
-  right: 24px;
-  bottom: 32px;
-  padding-top: 16px;
-  background: rgba(10, 15, 10, 0.9);
-  backdrop-filter: blur(6px);
+  padding-top: 4px;
 }
 
 .cm-decode-panel__header {
@@ -661,10 +703,6 @@ canvas {
   letter-spacing: 0.12em;
   cursor: pointer;
   transition: all 160ms ease;
-}
-
-.cm-nav-button--wide {
-  grid-column: span 2;
 }
 
 .cm-nav-button--active {

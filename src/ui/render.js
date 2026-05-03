@@ -174,6 +174,21 @@ function renderUpgradePanel(state) {
   `;
 }
 
+function renderUpgradeView(state) {
+  return `
+    <div class="cm-main-view cm-main-view--upgrades">
+      <div class="cm-section-header">
+        <h2 class="cm-section-title">${icon('cpu')}系统升级</h2>
+        <span class="cm-section-code">DEVICE_BUS: LIVE</span>
+      </div>
+      <div class="cm-scroll custom-scrollbar cm-upgrade-scroll">
+        <div class="cm-stage-summary">升级系统已从文本流中拆出。升级不会阻塞剧情推进，但会持续提升点数效率、作战收益和后续系统能力。</div>
+        ${renderUpgradePanel(state)}
+      </div>
+    </div>
+  `;
+}
+
 function renderRecentEvents(state) {
   return `
     <section class="cm-events">
@@ -232,12 +247,16 @@ function renderTerminalView(state, viewModel) {
         <h2 class="cm-section-title">${icon('terminal')}实时会话: ${viewModel.stage.title}</h2>
         <span class="cm-section-code">DATA_CHUNK: 0${state.stageIndex + 1}</span>
       </div>
-      <div class="cm-scroll custom-scrollbar">
-        <div class="cm-stage-summary">${viewModel.stage.summary}</div>
-        ${renderStoryLines(viewModel.visibleNodes)}
-        ${renderActionPanel(state, viewModel)}
-        ${renderUpgradePanel(state)}
-        ${renderRecentEvents(state)}
+      <div class="cm-terminal-layout">
+        <div class="cm-scroll custom-scrollbar" data-terminal-scroll>
+          <div class="cm-stage-summary">${viewModel.stage.summary}</div>
+          ${renderStoryLines(viewModel.visibleNodes)}
+          ${state.isDecoding || viewModel.canDecode ? '' : renderActionPanel(state, viewModel)}
+          ${renderRecentEvents(state)}
+        </div>
+        <div class="cm-terminal-action-slot">
+          ${state.isDecoding || viewModel.canDecode ? renderDecodePanel(state, viewModel) : ''}
+        </div>
       </div>
     </div>
   `;
@@ -286,10 +305,11 @@ function renderFooterControls(state, viewModel) {
   const evaDisabled = !viewModel.evaUnlocked ? 'cm-nav-button--disabled' : '';
   const evaBlocked = viewModel.blocked ? 'cm-nav-button--danger bounce-soft' : '';
   const archiveActive = state.currentView === 'ARCHIVE' ? 'cm-nav-button--selected' : '';
+  const upgradesActive = state.currentView === 'UPGRADES' ? 'cm-nav-button--selected' : '';
 
   return `
     <div class="cm-footer">
-      <button class="cm-nav-button cm-nav-button--wide ${autoActive}" data-action="toggle-autopilot">
+      <button class="cm-nav-button ${autoActive}" data-action="toggle-autopilot">
         ${icon('navigation')}
         <span>${state.gameState === 'AUTO_PILOT' ? '停止航行' : '自动巡航'}</span>
       </button>
@@ -297,9 +317,13 @@ function renderFooterControls(state, viewModel) {
         ${viewModel.evaUnlocked ? icon('crosshair') : icon('lock')}
         <span>EVA</span>
       </button>
-      <button class="cm-nav-button ${archiveActive}" data-action="toggle-view">
-        ${state.currentView === 'TERMINAL' ? icon('archive') : icon('terminal')}
-        <span>${state.currentView === 'TERMINAL' ? '存档' : '终端'}</span>
+      <button class="cm-nav-button ${upgradesActive}" data-action="set-view" data-view="UPGRADES">
+        ${state.currentView === 'UPGRADES' ? icon('terminal') : icon('cpu')}
+        <span>${state.currentView === 'UPGRADES' ? '终端' : '升级'}</span>
+      </button>
+      <button class="cm-nav-button ${archiveActive}" data-action="set-view" data-view="ARCHIVE">
+        ${state.currentView === 'ARCHIVE' ? icon('terminal') : icon('archive')}
+        <span>${state.currentView === 'ARCHIVE' ? '终端' : '存档'}</span>
       </button>
     </div>
   `;
@@ -315,7 +339,7 @@ function renderActiveScreen(state, viewModel) {
         </div>
         <div class="cm-status__right">
           <div class="cm-status__label">核心能级</div>
-          <div class="cm-status__value"><span data-energy-number>${Math.floor(state.energy)}</span>%</div>
+          <div class="cm-status__value cm-status__value--energy"><strong class="cm-status__energy-number" data-energy-number>${Math.floor(state.energy)}</strong><em class="cm-status__energy-unit">%</em></div>
         </div>
       </div>
       <div class="cm-energy-bar"><span data-energy-bar style="width:${state.energy}%"></span></div>
@@ -328,7 +352,11 @@ function renderActiveScreen(state, viewModel) {
     </div>
 
     <div class="cm-content">
-      ${state.currentView === 'TERMINAL' ? renderTerminalView(state, viewModel) : renderArchiveView(state)}
+      ${state.currentView === 'TERMINAL'
+        ? renderTerminalView(state, viewModel)
+        : state.currentView === 'UPGRADES'
+          ? renderUpgradeView(state)
+          : renderArchiveView(state)}
     </div>
 
     ${renderFooterControls(state, viewModel)}

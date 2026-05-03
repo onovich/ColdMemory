@@ -18,6 +18,18 @@ import {
 } from './progression.js';
 import { createStore } from './store.js';
 
+function getUpgradeGuideEvent(stageNumber) {
+  const unlockedTitles = UPGRADE_CONFIG
+    .filter((upgrade) => upgrade.unlockStage === stageNumber)
+    .map((upgrade) => upgrade.title);
+
+  if (unlockedTitles.length === 0) {
+    return null;
+  }
+
+  return `系统升级入口已开放：${unlockedTitles.join(' / ')}。可前往 [升级] 面板查看。`;
+}
+
 function createInitialState() {
   return {
   gameState: 'BOOT',
@@ -161,12 +173,14 @@ export class GameController {
     const stage = getCurrentStage(state);
     const firstNode = stage.normalNodes[0];
     const initialPoints = firstNode?.rewardPoints ?? 0;
+    const guideEvent = getUpgradeGuideEvent(state.stageIndex + 1);
 
     this.store.patchState({
       gameState: 'IDLE',
       points: state.points + initialPoints,
       lastPointGainAt: initialPoints > 0 ? Date.now() : state.lastPointGainAt,
       recentEvents: [
+        guideEvent,
         firstNode ? `记录节点 1/${stage.normalNodes.length} 已接入 (+${initialPoints} 记忆点)。` : null,
         '唤醒程序完成。先驱者-04 号主终端接管。',
         ...state.recentEvents
@@ -431,6 +445,7 @@ export class GameController {
     const nextStage = STORY_STAGES[nextStageIndex];
     const firstNode = nextStage.normalNodes[0];
     const initialPoints = firstNode?.rewardPoints ?? 0;
+    const guideEvent = getUpgradeGuideEvent(nextStageIndex + 1);
 
     this.store.patchState({
       stageIndex: nextStageIndex,
@@ -442,6 +457,7 @@ export class GameController {
       points: state.points + initialPoints,
       lastPointGainAt: initialPoints > 0 ? Date.now() : state.lastPointGainAt,
       recentEvents: [
+        guideEvent,
         firstNode ? `记录节点 1/${nextStage.normalNodes.length} 已接入 (+${initialPoints} 记忆点)。` : null,
         `${nextStage.title} 已接入。`,
         ...state.recentEvents

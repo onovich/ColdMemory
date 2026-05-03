@@ -9,6 +9,17 @@ export function bootstrapColdMemory(root) {
   let previousState = null;
   let previousViewModel = null;
 
+  function syncTerminalScroll(state) {
+    const terminalScroll = root.querySelector('[data-terminal-scroll]');
+    if (!terminalScroll || state.currentView !== 'TERMINAL') {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      terminalScroll.scrollTo({ top: terminalScroll.scrollHeight, behavior: 'auto' });
+    });
+  }
+
   function createUpgradeAffordabilitySignature(state) {
     return UPGRADE_CONFIG
       .filter((upgrade) => state.stageIndex + 1 >= upgrade.unlockStage)
@@ -142,9 +153,18 @@ export function bootstrapColdMemory(root) {
   function render() {
     const state = controller.getState();
     const viewModel = controller.getViewModel();
+    const shouldStickTerminalToBottom = !previousState
+      || previousState.currentView !== state.currentView
+      || previousState.stageIndex !== state.stageIndex
+      || previousState.revealedNormalNodes !== state.revealedNormalNodes
+      || previousState.criticalUnlocked !== state.criticalUnlocked;
+
     if (shouldFullRender(state, viewModel)) {
       renderApp(root, state, viewModel);
       syncShooter();
+      if (shouldStickTerminalToBottom) {
+        syncTerminalScroll(state);
+      }
     } else {
       patchLiveRegions(state, viewModel);
     }
@@ -177,6 +197,9 @@ export function bootstrapColdMemory(root) {
         break;
       case 'toggle-view':
         controller.toggleView();
+        break;
+      case 'set-view':
+        controller.setView(actionTarget.dataset.view === controller.getState().currentView ? 'TERMINAL' : actionTarget.dataset.view);
         break;
       case 'unlock-critical-evidence':
         controller.unlockCriticalWithEvidence();
