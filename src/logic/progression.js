@@ -1,6 +1,7 @@
 import { STORY_STAGES } from '../data/stages.js';
 import { getCriticalBattle } from '../data/battles.js';
-import { getAutoPointRate } from '../data/upgrades.js';
+import { getStageBlockerConditions } from '../data/blockers.js';
+import { UPGRADE_CONFIG, getAutoPointRate } from '../data/upgrades.js';
 
 export function getCurrentStage(state) {
   return STORY_STAGES[state.stageIndex] ?? STORY_STAGES[STORY_STAGES.length - 1];
@@ -10,14 +11,58 @@ export function isFinalStage(state) {
   return state.stageIndex >= STORY_STAGES.length - 1;
 }
 
+function meetsBlockCondition(state, stage, condition) {
+  switch (condition.type) {
+    case 'distance':
+      return state.distance >= (condition.value ?? stage.triggerDistance ?? 0);
+    case 'all-normal-revealed':
+      return hasRevealedAllNormalNodes(state, stage);
+    case 'upgrade-level': {
+      const level = state.upgrades?.[condition.upgradeId] ?? 0;
+      return level >= (condition.level ?? 0);
+    }
+    case 'critical-unlocked':
+      return state.criticalUnlocked === Boolean(condition.value);
+    case 'points':
+      return state.points >= (condition.value ?? 0);
+    case 'evidence':
+      return state.evidence >= (condition.value ?? 0);
+    default:
+      return false;
+  }
+}
+
+function describeBlockCondition(condition) {
+  const upgradeTitle = UPGRADE_CONFIG.find((upgrade) => upgrade.id === condition.upgradeId)?.title ?? condition.upgradeId;
+
+  switch (condition.type) {
+    case 'distance':
+      return `航程达到 ${Math.round(condition.value ?? 0)} KM`;
+    case 'all-normal-revealed':
+      return '当前章节普通剧情全部解锁';
+    case 'upgrade-level':
+      return `${upgradeTitle} 达到 Lv.${condition.level ?? 0}`;
+    case 'critical-unlocked':
+      return condition.value ? '关键剧情已解锁' : '关键剧情未解锁';
+    case 'points':
+      return `记忆点达到 ${Math.round(condition.value ?? 0)}`;
+    case 'evidence':
+      return `关键证词达到 ${Math.round(condition.value ?? 0)}`;
+    default:
+      return '未知条件';
+  }
+}
+
 export function hasRevealedAllNormalNodes(state, stage = getCurrentStage(state)) {
   return state.revealedNormalNodes >= stage.normalNodes.length;
 }
 
 export function isStoryBlocked(state, stage = getCurrentStage(state)) {
+  const blockerConditions = getStageBlockerConditions(stage);
+  const shouldBlock = blockerConditions.every((condition) => meetsBlockCondition(state, stage, condition));
+
   return (
-    state.distance >= stage.triggerDistance &&
-    hasRevealedAllNormalNodes(state, stage) &&
+    shouldBlock &&
     !state.criticalUnlocked &&
     !state.endingState
   );
@@ -90,7 +135,11 @@ function getMotherDirective(state, stage, blocked) {
 
 export function createStatusSnapshot(state) {
   const stage = getCurrentStage(state);
+  const blockerConditions = getStageBlockerConditions(stage);
   const blocked = isStoryBlocked(state, stage);
+  const pendingBlockerConditions = blockerConditions
+    .filter((condition) => !meetsBlockCondition(state, stage, condition))
+    .map((condition) => describeBlockCondition(condition));
   const logState = hasRevealedAllNormalNodes(state, stage) ? 'archived' : 'active';
   const autoPointRate = getAutoPointRate(state);
   const criticalBattle = getCriticalBattle(stage);
@@ -106,7 +155,7 @@ export function createStatusSnapshot(state) {
     finalStage: isFinalStage(state),
     allNormalRevealed: hasRevealedAllNormalNodes(state, stage),
     logState,
-    signalStrength: Math.max(8, 100 - Math.floor(state.distance / 12)),
+    pendingBlockerConditions,
     stageProgress: `${Math.min(state.revealedNormalNodes, stage.normalNodes.length)}/${stage.normalNodes.length}`,
     stageCode: String(state.stageIndex + 1).padStart(2, '0'),
     motherHint: getMotherDirective(state, stage, blocked),

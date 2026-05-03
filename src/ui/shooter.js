@@ -1,9 +1,10 @@
 export class DebrisShooter {
-  constructor({ mountNode, targetHits, combatMode, onComplete }) {
+  constructor({ mountNode, targetHits, combatMode, onComplete, onShotAttempt }) {
     this.mountNode = mountNode;
     this.targetHits = targetHits;
     this.combatMode = combatMode;
     this.onComplete = onComplete;
+    this.onShotAttempt = onShotAttempt;
     this.score = 0;
     this.frame = 0;
     this.playerX = 240;
@@ -19,11 +20,15 @@ export class DebrisShooter {
   }
 
   render() {
+    const progressText = this.combatMode
+      ? `清除: <strong data-score>${this.score}</strong> / ${this.targetHits}`
+      : `回收命中: <strong data-score>${this.score}</strong>`;
+
     this.mountNode.innerHTML = `
       <div class="shooter">
         <div class="shooter__meta">
-          <span>系统: ${this.combatMode ? '作战模式' : '手动干预'}</span>
-          <span>清除: <strong data-score>${this.score}</strong> / ${this.targetHits}</span>
+          <span>系统: ${this.combatMode ? '作战模式' : '探索模式'}</span>
+          <span>${progressText}</span>
         </div>
         <canvas width="280" height="380"></canvas>
       </div>
@@ -32,6 +37,10 @@ export class DebrisShooter {
     this.canvas = this.mountNode.querySelector('canvas');
     this.scoreNode = this.mountNode.querySelector('[data-score]');
     this.context = this.canvas.getContext('2d');
+  }
+
+  getScore() {
+    return this.score;
   }
 
   start() {
@@ -67,8 +76,8 @@ export class DebrisShooter {
     this.drawPlayer();
     this.detectHits();
 
-    if (this.score >= this.targetHits) {
-      this.onComplete();
+    if (this.combatMode && this.score >= this.targetHits) {
+      this.onComplete(this.score);
       return;
     }
 
@@ -97,6 +106,10 @@ export class DebrisShooter {
 
   spawnBullets() {
     if (this.frame % 10 !== 0) {
+      return;
+    }
+
+    if (typeof this.onShotAttempt === 'function' && !this.onShotAttempt()) {
       return;
     }
 

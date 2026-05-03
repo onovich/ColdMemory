@@ -6,8 +6,15 @@ import {
   STORY_STAGES
 } from '../data/stages.js';
 import { ECONOMY } from '../data/economy.js';
-import { getCriticalBattle, getDailySalvageReward } from '../data/battles.js';
-import { UPGRADE_CONFIG, getAutoPointRate, getCombatRewardMultiplier, getNextUpgradeLevel } from '../data/upgrades.js';
+import { getCriticalBattle } from '../data/battles.js';
+import { EXPLORATION_TIERS } from '../data/exploration.js';
+import {
+  UPGRADE_CONFIG,
+  getAutoPointRate,
+  getCombatRewardMultiplier,
+  getExplorationRewardMultiplier,
+  getNextUpgradeLevel
+} from '../data/upgrades.js';
 import {
   canUnlockCriticalWithEvidence,
   canUnlockCriticalWithPoints,
@@ -28,6 +35,23 @@ function getUpgradeGuideEvent(stageNumber) {
   }
 
   return `系统升级入口已开放：${unlockedTitles.join(' / ')}。可前往 [升级] 面板查看。`;
+}
+
+function getCurrentExplorationTier(stageIndex) {
+  const unlockedStage = stageIndex + 1;
+  return EXPLORATION_TIERS
+    .filter((tier) => tier.unlockStage <= unlockedStage)
+    .at(-1) ?? EXPLORATION_TIERS[0];
+}
+
+function rollRange(minValue, maxValue) {
+  const min = Math.round(minValue);
+  const max = Math.round(maxValue);
+  if (max <= min) {
+    return min;
+  }
+
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function createInitialState() {
@@ -231,8 +255,9 @@ export class GameController {
     const blocked = isStoryBlocked(state);
 
     const autoPointRate = getAutoPointRate(state);
+    const tickSeconds = ECONOMY.systemTickMs / 1000;
     const autopilotIncome = state.gameState === 'AUTO_PILOT' ? autoPointRate.autopilot : 0;
-    const pointGain = (autoPointRate.passive + autopilotIncome) * (ECONOMY.systemTickMs / 1000);
+    const pointGain = (autoPointRate.passive + autopilotIncome) * tickSeconds;
     const nextBuffer = state.autoPointBuffer + pointGain;
     const gainedPoints = Math.floor(nextBuffer);
     const patch = {
@@ -255,17 +280,26 @@ export class GameController {
       recentEvents = ['航道阻塞，自动巡航已挂起。', ...recentEvents].slice(0, 4);
     }
 
+    let nextEnergy = state.energy;
+    const energyRegenPerSecond = ECONOMY.baseEnergyRegenPerSecond + autoPointRate.energyPerSecond;
+    if (energyRegenPerSecond > 0) {
+      nextEnergy = Math.min(100, nextEnergy + energyRegenPerSecond * tickSeconds);
+    }
+
     if (
       state.gameState === 'AUTO_PILOT' &&
       !state.isEvaOpen &&
       !blocked &&
       !state.criticalUnlocked &&
-      state.energy > 0
+      nextEnergy > 0
     ) {
-      const nextEnergy = Math.max(0, state.energy - AUTO_DRIVE_ENERGY_PER_TICK);
+      nextEnergy = Math.max(0, nextEnergy - AUTO_DRIVE_ENERGY_PER_TICK);
       patch.distance = state.distance + AUTO_DRIVE_DISTANCE_PER_TICK;
-      patch.energy = nextEnergy;
       patch.gameState = nextEnergy > 0 ? state.gameState : 'IDLE';
+    }
+
+    if (!Object.is(nextEnergy, state.energy)) {
+      patch.energy = nextEnergy;
     }
 
     if (Date.now() - state.lastPointGainAt >= ECONOMY.inactivityGrantThresholdMs) {
@@ -287,6 +321,19 @@ export class GameController {
     }
 
     this.store.patchState(patch);
+  }
+
+  consumeEvaShotEnergy() {
+    const state = this.getState();
+    if (state.gameState === 'BOOT' || !state.isEvaOpen || state.energy < ECONOMY.evaShotEnergyCost) {
+      return false;
+    }
+
+    this.store.patchState({
+      energy: Math.max(0, state.energy - ECONOMY.evaShotEnergyCost)
+    });
+
+    return true;
   }
 
   startDecoding() {
@@ -370,14 +417,16 @@ export class GameController {
     });
   }
 
-  completeEvaMission() {
+  completeEvaMission(score = 0) {
     const state = this.getState();
     const stage = getCurrentStage(state);
+    const safeScore = Math.max(0, Math.round(score));
 
     if (isStoryBlocked(state, stage)) {
       const battle = getCriticalBattle(stage);
-      const points = Math.round(battle.rewardPoints * getCombatRewardMultiplier(state));
-      this.store.patchState(this.createPointGainPatch(state, points, `${battle.label} 完成`, {
+      const basePoints = Math.round(battle.rewardPoints * getCombatRewardMultiplier(state));
+      const hitBonus = Math.round(safeScore * ECONOMY.evaCombatPointBonusPerHit);
+      this.store.patchState(this.createPointGainPatch(state, basePoints + hitBonus, `${battle.label} 完成（命中 ${safeScore}）`, {
         isEvaOpen: false,
         battleCleared: true,
         evidence: state.evidence + battle.rewardEvidence,
@@ -389,10 +438,16 @@ export class GameController {
       return;
     }
 
-    const salvageReward = getDailySalvageReward(state.stageIndex, getCombatRewardMultiplier(state));
-    this.store.patchState(this.createPointGainPatch(state, salvageReward.points, '日常回收作业完成', {
+    const tier = getCurrentExplorationTier(state.stageIndex);
+    const randomBonus = rollRange(tier.randomRewardPoints[0], tier.randomRewardPoints[1]);
+    const scoreReward = safeScore * ECONOMY.evaExplorationPointPerHit;
+    const rawPoints = safeScore > 0 ? tier.fixedRewardPoints + randomBonus + scoreReward : 0;
+    const points = Math.round(rawPoints * getExplorationRewardMultiplier(state));
+    const energyReward = safeScore > 0 ? tier.energyReward : 0;
+
+    this.store.patchState(this.createPointGainPatch(state, points, `${tier.title} 探索结算（命中 ${safeScore}）`, {
       isEvaOpen: false,
-      energy: Math.min(100, state.energy + salvageReward.energy),
+      energy: Math.min(100, state.energy + energyReward),
       stats: {
         battlesWon: state.stats.battlesWon + 1
       }
@@ -426,7 +481,7 @@ export class GameController {
       return;
     }
 
-    this.store.patchState(this.createPointSpendPatch(state, stage.criticalNode.unlockCostPoints, `${stage.criticalNode.title} 已用点数强制接入`, {
+    this.store.patchState(this.createPointSpendPatch(state, stage.criticalNode.unlockCostPoints, `${stage.criticalNode.title} 已用记忆点强制接入`, {
       criticalUnlocked: true,
       battleCleared: false,
       gameState: 'IDLE'

@@ -6,15 +6,15 @@ export const UPGRADE_CONFIG = [
     unlockStage: 1,
     implemented: true,
     levels: [
-      { cost: 40, passivePerSecond: 0.15 },
-      { cost: 90, passivePerSecond: 0.2 },
-      { cost: 160, passivePerSecond: 0.3 }
+      { cost: 40, passivePerSecond: 0.15, energyPerSecond: 0.04 },
+      { cost: 90, passivePerSecond: 0.2, energyPerSecond: 0.05 },
+      { cost: 160, passivePerSecond: 0.3, energyPerSecond: 0.06 }
     ]
   },
   {
     id: 'salvageArray',
     title: '回收阵列',
-    summary: '强化作战收益，并在自动巡航时提供被动点数。',
+    summary: '强化作战收益，并在自动巡航时提供被动记忆点。',
     unlockStage: 2,
     implemented: true,
     levels: [
@@ -26,7 +26,7 @@ export const UPGRADE_CONFIG = [
   {
     id: 'decodeCache',
     title: '解码缓存器',
-    summary: '提升手动剧情收益，并提供后台解析点数。',
+    summary: '提升手动剧情收益，并提供后台解析记忆点。',
     unlockStage: 3,
     implemented: true,
     levels: [
@@ -38,9 +38,9 @@ export const UPGRADE_CONFIG = [
   {
     id: 'scoutDrones',
     title: '勘探无人机',
-    summary: '用于未来的日常探索系统。当前版本仅提供结构草案。',
+    summary: '强化 EVA 探索收益并缩短回收作业周期。',
     unlockStage: 2,
-    implemented: false,
+    implemented: true,
     levels: [
       { cost: 60, explorationRewardMultiplier: 0.15, explorationEnabled: true },
       { cost: 120, explorationRewardMultiplier: 0.15, explorationDurationDelta: -5 },
@@ -73,7 +73,8 @@ export function getUpgradeEffects(state) {
     autopilotPerSecond: 0,
     manualRewardBonus: 0,
     combatRewardMultiplier: 0,
-    explorationRewardMultiplier: 0
+    explorationRewardMultiplier: 0,
+    energyPerSecond: 0
   };
 
   UPGRADE_CONFIG.forEach((upgrade) => {
@@ -84,6 +85,7 @@ export function getUpgradeEffects(state) {
       effects.manualRewardBonus += entry.manualRewardBonus ?? 0;
       effects.combatRewardMultiplier += entry.combatRewardMultiplier ?? 0;
       effects.explorationRewardMultiplier += entry.explorationRewardMultiplier ?? 0;
+      effects.energyPerSecond += entry.energyPerSecond ?? 0;
     });
   });
 
@@ -100,8 +102,13 @@ export function getAutoPointRate(state) {
     passive: effects.passivePerSecond,
     autopilot: effects.autopilotPerSecond,
     total: effects.passivePerSecond + effects.autopilotPerSecond,
-    manualBonus: effects.manualRewardBonus
+    manualBonus: effects.manualRewardBonus,
+    energyPerSecond: effects.energyPerSecond
   };
+}
+
+export function getExplorationRewardMultiplier(state) {
+  return 1 + getUpgradeEffects(state).explorationRewardMultiplier;
 }
 
 export function formatUpgradeEffect(upgradeId, levelEntry) {
@@ -111,23 +118,27 @@ export function formatUpgradeEffect(upgradeId, levelEntry) {
 
   const effects = [];
   if (levelEntry.passivePerSecond) {
-    effects.push(`常驻 +${levelEntry.passivePerSecond.toFixed(2)} 点/秒`);
+    effects.push(`常驻 +${levelEntry.passivePerSecond.toFixed(2)} 记忆点/秒`);
   }
 
   if (levelEntry.autopilotPerSecond) {
-    effects.push(`巡航 +${levelEntry.autopilotPerSecond.toFixed(2)} 点/秒`);
+    effects.push(`巡航 +${levelEntry.autopilotPerSecond.toFixed(2)} 记忆点/秒`);
   }
 
   if (levelEntry.manualRewardBonus) {
-    effects.push(`普通剧情 +${levelEntry.manualRewardBonus} 点`);
+    effects.push(`普通剧情 +${levelEntry.manualRewardBonus} 记忆点`);
   }
 
   if (levelEntry.combatRewardMultiplier) {
     effects.push(`战斗奖励 +${Math.round(levelEntry.combatRewardMultiplier * 100)}%`);
   }
 
+  if (levelEntry.energyPerSecond) {
+    effects.push(`核心能级 +${levelEntry.energyPerSecond.toFixed(2)}%/秒`);
+  }
+
   if (upgradeId === 'scoutDrones' && !effects.length) {
-    effects.push('预留给探索收益与持续时间修正');
+    effects.push('探索收益与持续时间修正');
   }
 
   return effects.join(' / ');

@@ -67,8 +67,18 @@ function renderBlockedBox(viewModel) {
     <div class="cm-blocked">
       <div class="cm-blocked__title">${icon('alert')}<span>致命阻塞</span></div>
       <p>${viewModel.criticalBattle.description}</p>
-      <div class="cm-blocked__meta">清除目标: ${viewModel.criticalBattle.targetHits} / 奖励: ${viewModel.criticalBattle.rewardPoints} 记忆点 + 1 关键证词</div>
+      <div class="cm-blocked__meta">清除目标: ${viewModel.criticalBattle.targetHits} / 基础奖励: ${viewModel.criticalBattle.rewardPoints} 记忆点 + 1 关键证词（命中越高额外奖励越高）</div>
       <button class="cm-blocked__button" data-action="open-eva">手动清空航道</button>
+    </div>
+  `;
+}
+
+function renderPendingBlockerBox(viewModel) {
+  return `
+    <div class="cm-blocked">
+      <div class="cm-blocked__title">${icon('alert')}<span>阻塞前置条件未满足</span></div>
+      <p>当前章节记录已恢复完毕，但阻塞触发条件尚未全部满足。</p>
+      <div class="cm-blocked__meta">缺失条件：${viewModel.pendingBlockerConditions.join(' / ')}</div>
     </div>
   `;
 }
@@ -88,7 +98,7 @@ function renderCriticalUnlockPanel(state, viewModel) {
           使用关键证词 (${stage.criticalNode.requiredEvidence})
         </button>
         <button class="cm-secondary-button" data-action="unlock-critical-points" ${pointsDisabled}>
-          消耗 ${stage.criticalNode.unlockCostPoints} 点强制接入
+          消耗 ${stage.criticalNode.unlockCostPoints} 记忆点强制接入
         </button>
       </div>
     </div>
@@ -164,7 +174,7 @@ function renderUpgradePanel(state) {
               </div>
               <div class="cm-upgrade-card__effect">${formatUpgradeEffect(upgrade.id, nextLevel)}</div>
               <button class="cm-upgrade-card__button" data-action="purchase-upgrade" data-upgrade-id="${upgrade.id}" ${disabled}>
-                ${!upgrade.implemented ? '待开发' : nextLevel ? `升级 ${nextLevel.cost} 点` : '已满级'}
+                ${!upgrade.implemented ? '待开发' : nextLevel ? `升级 ${nextLevel.cost} 记忆点` : '已满级'}
               </button>
             </article>
           `;
@@ -182,7 +192,7 @@ function renderUpgradeView(state) {
         <span class="cm-section-code">DEVICE_BUS: LIVE</span>
       </div>
       <div class="cm-scroll custom-scrollbar cm-upgrade-scroll">
-        <div class="cm-stage-summary">升级系统已从文本流中拆出。升级不会阻塞剧情推进，但会持续提升点数效率、作战收益和后续系统能力。</div>
+        <div class="cm-stage-summary">升级系统已从文本流中拆出。升级不会阻塞剧情推进，但会持续提升记忆点效率、作战收益和后续系统能力。</div>
         ${renderUpgradePanel(state)}
       </div>
     </div>
@@ -211,6 +221,10 @@ function renderActionPanel(state, viewModel) {
     }
 
     return renderBlockedBox(viewModel);
+  }
+
+  if (viewModel.pendingBlockerConditions.length > 0 && viewModel.allNormalRevealed) {
+    return renderPendingBlockerBox(viewModel);
   }
 
   return renderDecodePanel(state, viewModel);
@@ -347,7 +361,7 @@ function renderActiveScreen(state, viewModel) {
       <div class="cm-status__economy">
         <div class="cm-economy-chip"><strong data-points-value>${state.points}</strong><span>记忆点</span></div>
         <div class="cm-economy-chip"><strong data-evidence-value>${state.evidence}</strong><span>关键证词</span></div>
-        <div class="cm-economy-chip"><strong data-rate-value>${viewModel.autoPointRate.total.toFixed(2)}</strong><span>点/秒</span></div>
+        <div class="cm-economy-chip"><strong data-rate-value>${viewModel.autoPointRate.total.toFixed(2)}</strong><span>记忆点/秒</span></div>
       </div>
     </div>
 
@@ -378,7 +392,7 @@ function renderModal(state, viewModel) {
       <div class="cm-modal__footer">
         ${viewModel.blocked
           ? `${viewModel.criticalBattle.label}: ${viewModel.criticalBattle.description}`
-          : '日常巡检: 清理区域碎片可稳定核心能级并回收记忆点。右上角断开连接。'}
+          : '探索模式: 命中越多，探索结算时获得的记忆点与核心能级越高。可随时关闭并结算。'}
       </div>
     </div>
   `;

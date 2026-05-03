@@ -169,12 +169,13 @@ export function bootstrapColdMemory(root) {
       mountNode,
       targetHits: viewModel.blocked ? viewModel.criticalBattle.targetHits : 5,
       combatMode: viewModel.blocked,
-      onComplete: () => {
+      onShotAttempt: () => controller.consumeEvaShotEnergy(),
+      onComplete: (score) => {
         if (shooter) {
           shooter.destroy();
           shooter = null;
         }
-        controller.completeEvaMission();
+        controller.completeEvaMission(score);
       }
     });
   }
@@ -262,6 +263,13 @@ export function bootstrapColdMemory(root) {
         controller.chooseEnding(actionTarget.dataset.endingId);
         break;
       case 'close-eva':
+        if (shooter) {
+          const score = shooter.getScore();
+          shooter.destroy();
+          shooter = null;
+          controller.completeEvaMission(score);
+          break;
+        }
         controller.closeEva();
         break;
       default:

@@ -5,7 +5,8 @@ export const EXPLORATION_TIERS = [
     unlockStage: 1,
     durationSeconds: 45,
     fixedRewardPoints: 20,
-    randomRewardPoints: [0, 6]
+    randomRewardPoints: [0, 6],
+    energyReward: 6
   },
   {
     id: 'hull-maintenance',
@@ -13,7 +14,8 @@ export const EXPLORATION_TIERS = [
     unlockStage: 2,
     durationSeconds: 45,
     fixedRewardPoints: 22,
-    randomRewardPoints: [0, 8]
+    randomRewardPoints: [0, 8],
+    energyReward: 8
   },
   {
     id: 'deep-bay',
@@ -21,7 +23,8 @@ export const EXPLORATION_TIERS = [
     unlockStage: 3,
     durationSeconds: 45,
     fixedRewardPoints: 26,
-    randomRewardPoints: [0, 12]
+    randomRewardPoints: [0, 12],
+    energyReward: 10
   },
   {
     id: 'far-array',
@@ -29,7 +32,8 @@ export const EXPLORATION_TIERS = [
     unlockStage: 4,
     durationSeconds: 45,
     fixedRewardPoints: 30,
-    randomRewardPoints: [0, 14]
+    randomRewardPoints: [0, 14],
+    energyReward: 12
   },
   {
     id: 'return-outpost',
@@ -37,6 +41,7 @@ export const EXPLORATION_TIERS = [
     unlockStage: 5,
     durationSeconds: 45,
     fixedRewardPoints: 34,
-    randomRewardPoints: [0, 16]
+    randomRewardPoints: [0, 16],
+    energyReward: 14
   }
 ];
