@@ -428,6 +428,10 @@ export class GameController {
     }
 
     const nextStageIndex = Math.min(STORY_STAGES.length - 1, state.stageIndex + 1);
+    const nextStage = STORY_STAGES[nextStageIndex];
+    const firstNode = nextStage.normalNodes[0];
+    const initialPoints = firstNode?.rewardPoints ?? 0;
+
     this.store.patchState({
       stageIndex: nextStageIndex,
       revealedNormalNodes: 1,
@@ -435,7 +439,18 @@ export class GameController {
       battleCleared: false,
       gameState: 'IDLE',
       currentView: 'TERMINAL',
-      recentEvents: [`${STORY_STAGES[nextStageIndex].title} 已接入。`, ...state.recentEvents].slice(0, 4)
+      points: state.points + initialPoints,
+      lastPointGainAt: initialPoints > 0 ? Date.now() : state.lastPointGainAt,
+      recentEvents: [
+        firstNode ? `记录节点 1/${nextStage.normalNodes.length} 已接入 (+${initialPoints} 记忆点)。` : null,
+        `${nextStage.title} 已接入。`,
+        ...state.recentEvents
+      ].filter(Boolean).slice(0, 4),
+      stats: {
+        ...state.stats,
+        earnedPoints: state.stats.earnedPoints + initialPoints,
+        decodedNodes: state.stats.decodedNodes + (firstNode ? 1 : 0)
+      }
     });
   }
 
