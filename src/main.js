@@ -9,41 +9,39 @@ export function bootstrapColdMemory(root) {
   let previousState = null;
   let previousViewModel = null;
 
+  function stabilizeTerminalScroll(setTargetTop) {
+    const run = () => {
+      const terminalScroll = root.querySelector('[data-terminal-scroll]');
+      if (!terminalScroll) {
+        return;
+      }
+
+      const targetTop = setTargetTop(terminalScroll);
+      terminalScroll.scrollTop = targetTop;
+      terminalScroll.scrollTo({ top: targetTop, behavior: 'auto' });
+    };
+
+    run();
+    window.requestAnimationFrame(run);
+    window.setTimeout(run, 0);
+    window.setTimeout(run, 60);
+    window.setTimeout(run, 180);
+  }
+
   function syncTerminalScroll(state) {
-    const terminalScroll = root.querySelector('[data-terminal-scroll]');
-    if (!terminalScroll || state.currentView !== 'TERMINAL') {
+    if (state.currentView !== 'TERMINAL') {
       return;
     }
 
-    terminalScroll.scrollTop = terminalScroll.scrollHeight;
-
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        terminalScroll.scrollTo({ top: terminalScroll.scrollHeight, behavior: 'auto' });
-        window.setTimeout(() => {
-          terminalScroll.scrollTop = terminalScroll.scrollHeight;
-        }, 0);
-      });
-    });
+    stabilizeTerminalScroll((terminalScroll) => terminalScroll.scrollHeight);
   }
 
   function restoreTerminalScroll(scrollSnapshot) {
-    const terminalScroll = root.querySelector('[data-terminal-scroll]');
-    if (!terminalScroll || !scrollSnapshot) {
+    if (!scrollSnapshot) {
       return;
     }
 
-    const targetTop = Math.max(0, terminalScroll.scrollHeight - terminalScroll.clientHeight - scrollSnapshot.distanceFromBottom);
-    terminalScroll.scrollTop = targetTop;
-
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        terminalScroll.scrollTo({ top: targetTop, behavior: 'auto' });
-        window.setTimeout(() => {
-          terminalScroll.scrollTop = targetTop;
-        }, 0);
-      });
-    });
+    stabilizeTerminalScroll((terminalScroll) => Math.max(0, terminalScroll.scrollHeight - terminalScroll.clientHeight - scrollSnapshot.distanceFromBottom));
   }
 
   function createUpgradeAffordabilitySignature(state) {

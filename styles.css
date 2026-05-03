@@ -321,6 +321,7 @@ canvas {
 .cm-scroll {
   flex: 1;
   overflow-y: auto;
+  overflow-anchor: none;
   padding-right: 12px;
   padding-bottom: 128px;
 }
