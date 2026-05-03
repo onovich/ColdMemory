@@ -26,6 +26,11 @@ export function bootstrapColdMemory(root) {
     window.setTimeout(run, 0);
     window.setTimeout(run, 60);
     window.setTimeout(run, 180);
+    window.setTimeout(run, 320);
+  }
+
+  function forceTerminalBottomNow() {
+    stabilizeTerminalScroll((terminalScroll) => terminalScroll.scrollHeight);
   }
 
   function syncTerminalScroll(state) {
@@ -224,7 +229,11 @@ export function bootstrapColdMemory(root) {
         controller.toggleAutoPilot();
         break;
       case 'decode':
+        if (actionTarget instanceof HTMLElement) {
+          actionTarget.blur();
+        }
         controller.startDecoding();
+        forceTerminalBottomNow();
         break;
       case 'open-eva':
         if (!actionTarget.disabled) {
