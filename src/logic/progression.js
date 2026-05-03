@@ -49,6 +49,7 @@ export function createStatusSnapshot(state) {
     logState,
     signalStrength: Math.max(8, 100 - Math.floor(state.distance / 12)),
     stageProgress: `${Math.min(state.revealedLines, stage.content.length)}/${stage.content.length}`,
-    stageCode: String(state.stageIndex + 1).padStart(2, '0')
+    stageCode: String(state.stageIndex + 1).padStart(2, '0'),
+    motherHint: blocked ? '!! 航道检测到阻塞 !!' : stage.motherHint
   };
 }

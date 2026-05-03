@@ -22,10 +22,10 @@ export class DebrisShooter {
     this.mountNode.innerHTML = `
       <div class="shooter">
         <div class="shooter__meta">
-          <span>mode: ${this.combatMode ? 'hazard purge' : 'routine scan'}</span>
-          <span>removed: <strong data-score>${this.score}</strong> / ${this.targetHits}</span>
+          <span>系统: ${this.combatMode ? '作战模式' : '手动干预'}</span>
+          <span>清除: <strong data-score>${this.score}</strong> / ${this.targetHits}</span>
         </div>
-        <canvas width="480" height="480"></canvas>
+        <canvas width="280" height="380"></canvas>
       </div>
     `;
 
@@ -76,29 +76,22 @@ export class DebrisShooter {
   }
 
   drawBackdrop() {
-    this.context.fillStyle = '#02050a';
+    this.context.fillStyle = '#000';
     this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    for (let index = 0; index < 24; index += 1) {
-      const x = (index * 91 + this.frame * 0.7) % this.canvas.width;
-      const y = (index * 47 + this.frame * 1.3) % this.canvas.height;
-      this.context.fillStyle = index % 5 === 0 ? '#ffd36a' : '#8cf0ff';
-      this.context.fillRect(x, y, 2, 2);
-    }
   }
 
   spawnTargets() {
-    const spawnRate = this.combatMode ? 28 : 40;
+    const spawnRate = this.combatMode ? 30 : 50;
     if (this.frame % spawnRate !== 0) {
       return;
     }
 
     this.targets.push({
       id: `${this.frame}-${Math.random()}`,
-      x: 20 + Math.random() * (this.canvas.width - 40),
-      y: -24,
-      size: 16 + Math.random() * 10,
-      speed: 1.6 + Math.random() * (this.combatMode ? 2 : 1.2)
+      x: Math.random() * (this.canvas.width - 30) + 15,
+      y: -20,
+      size: 18,
+      speed: 1.5 + Math.random() * 2
     });
   }
 
@@ -118,8 +111,8 @@ export class DebrisShooter {
     this.bullets = this.bullets.filter((bullet) => bullet.y > -24);
     this.bullets.forEach((bullet) => {
       bullet.y -= 8;
-      this.context.fillStyle = '#b6f7ff';
-      this.context.fillRect(bullet.x - 1.5, bullet.y, 3, 14);
+      this.context.fillStyle = '#4af626';
+      this.context.fillRect(bullet.x - 1, bullet.y, 2, 8);
     });
   }
 
@@ -127,20 +120,20 @@ export class DebrisShooter {
     this.targets = this.targets.filter((target) => target.y < this.canvas.height + 30);
     this.targets.forEach((target) => {
       target.y += target.speed;
-      this.context.strokeStyle = this.combatMode ? '#ff6a7a' : '#8cf0ff';
+      this.context.strokeStyle = '#4af626';
       this.context.lineWidth = 1.5;
       this.context.strokeRect(target.x - target.size / 2, target.y - target.size / 2, target.size, target.size);
     });
   }
 
   drawPlayer() {
-    const y = this.canvas.height - 34;
-    this.context.strokeStyle = '#8cf0ff';
+    const y = this.canvas.height - 40;
+    this.context.strokeStyle = '#4af626';
     this.context.lineWidth = 2;
     this.context.beginPath();
-    this.context.moveTo(this.playerX, y - 14);
-    this.context.lineTo(this.playerX - 14, y + 14);
-    this.context.lineTo(this.playerX + 14, y + 14);
+    this.context.moveTo(this.playerX, y - 12);
+    this.context.lineTo(this.playerX - 12, y + 12);
+    this.context.lineTo(this.playerX + 12, y + 12);
     this.context.closePath();
     this.context.stroke();
   }
@@ -155,8 +148,8 @@ export class DebrisShooter {
           return;
         }
 
-        const withinX = bullet.x >= target.x - target.size / 2 && bullet.x <= target.x + target.size / 2;
-        const withinY = bullet.y >= target.y - target.size / 2 && bullet.y <= target.y + target.size / 2;
+        const withinX = Math.abs(bullet.x - target.x) < 12;
+        const withinY = Math.abs(bullet.y - target.y) < 12;
         if (withinX && withinY) {
           hitBullets.add(bullet.id);
           hitTargets.add(target.id);

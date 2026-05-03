@@ -66,6 +66,9 @@ export function bootstrapColdMemory(root) {
           controller.openEva();
         }
         break;
+      case 'toggle-view':
+        controller.toggleView();
+        break;
       case 'close-eva':
         controller.closeEva();
         break;
@@ -83,4 +86,9 @@ export function bootstrapColdMemory(root) {
       shooter.destroy();
     }
   });
+}
+
+const root = document.getElementById('app');
+if (root) {
+  bootstrapColdMemory(root);
 }

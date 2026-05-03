@@ -10,16 +10,17 @@ import { createStatusSnapshot, getCurrentStage, isStoryBlocked, isEvaUnlocked } 
 import { createStore } from './store.js';
 
 const INITIAL_STATE = {
-  screen: 'boot',
-  autoPilot: false,
+  gameState: 'BOOT',
+  currentView: 'TERMINAL',
   distance: 0,
-  energy: 85,
+  energy: 90,
   stageIndex: 0,
   revealedLines: 1,
   decodeProgress: 0,
   isDecoding: false,
   isEvaOpen: false,
   evaUnlocked: false,
+  glitch: false,
   recentEvents: ['低温舱信号恢复。等待唤醒。']
 };
 
@@ -27,12 +28,22 @@ export class GameController {
   constructor() {
     this.store = createStore(INITIAL_STATE);
     this.decodeTimer = null;
+    this.glitchCooldown = null;
     this.autoPilotTimer = window.setInterval(() => this.tickAutoDrive(), 200);
+    this.glitchTimer = window.setInterval(() => this.tickGlitch(), 3000);
   }
 
   destroy() {
     if (this.autoPilotTimer) {
       window.clearInterval(this.autoPilotTimer);
+    }
+
+    if (this.glitchTimer) {
+      window.clearInterval(this.glitchTimer);
+    }
+
+    if (this.glitchCooldown) {
+      window.clearTimeout(this.glitchCooldown);
     }
 
     this.stopDecodeTimer();
@@ -52,7 +63,7 @@ export class GameController {
 
   wakeUp() {
     this.store.patchState({
-      screen: 'active',
+      gameState: 'IDLE',
       recentEvents: [
         '唤醒程序完成。先驱者-04 号主终端接管。',
         ...this.getState().recentEvents
@@ -62,25 +73,48 @@ export class GameController {
 
   toggleAutoPilot() {
     const state = this.getState();
-    if (state.screen !== 'active') {
+    if (state.gameState === 'BOOT') {
       return;
     }
 
-    const autoPilot = !state.autoPilot;
+    const gameState = state.gameState === 'AUTO_PILOT' ? 'IDLE' : 'AUTO_PILOT';
     this.store.patchState({
-      autoPilot,
+      gameState,
       recentEvents: [
-        autoPilot ? '自动巡航启动。' : '自动巡航已挂起。',
+        gameState === 'AUTO_PILOT' ? '自动巡航启动。' : '自动巡航已挂起。',
         ...state.recentEvents
       ].slice(0, 4)
     });
   }
 
+  toggleView() {
+    const state = this.getState();
+    if (state.gameState === 'BOOT') {
+      return;
+    }
+
+    this.store.patchState({
+      currentView: state.currentView === 'TERMINAL' ? 'ARCHIVE' : 'TERMINAL'
+    });
+  }
+
+  tickGlitch() {
+    const state = this.getState();
+    if (state.gameState === 'BOOT' || Math.random() <= 0.95) {
+      return;
+    }
+
+    this.store.patchState({ glitch: true });
+    this.glitchCooldown = window.setTimeout(() => {
+      this.store.patchState({ glitch: false });
+      this.glitchCooldown = null;
+    }, Math.random() * 200 + 100);
+  }
+
   tickAutoDrive() {
     const state = this.getState();
     if (
-      state.screen !== 'active' ||
-      !state.autoPilot ||
+      state.gameState !== 'AUTO_PILOT' ||
       state.isEvaOpen ||
       isStoryBlocked(state) ||
       state.energy <= 0
@@ -92,7 +126,7 @@ export class GameController {
     this.store.patchState({
       distance: state.distance + AUTO_DRIVE_DISTANCE_PER_TICK,
       energy: nextEnergy,
-      autoPilot: nextEnergy > 0 ? state.autoPilot : false
+      gameState: nextEnergy > 0 ? state.gameState : 'IDLE'
     });
   }
 
@@ -156,13 +190,13 @@ export class GameController {
 
   openEva() {
     const state = this.getState();
-    if (state.screen !== 'active' || !isEvaUnlocked(state)) {
+    if (state.gameState === 'BOOT' || !isEvaUnlocked(state)) {
       return;
     }
 
     this.store.patchState({
       isEvaOpen: true,
-      autoPilot: false,
+      gameState: 'IDLE',
       recentEvents: ['EVA 终端连接建立。', ...state.recentEvents].slice(0, 4)
     });
   }
@@ -192,7 +226,7 @@ export class GameController {
         distance: state.distance + 12,
         energy: Math.min(100, state.energy + 8),
         recentEvents: [
-          `航道清理完成。${STORY_STAGES[nextStageIndex].chapter} 已接入。`,
+          `航道清理完成。${STORY_STAGES[nextStageIndex].title} 已接入。`,
           ...state.recentEvents
         ].slice(0, 4)
       });
@@ -202,7 +236,7 @@ export class GameController {
     this.store.patchState({
       isEvaOpen: false,
       energy: Math.min(100, state.energy + EVA_RECOVERY),
-      recentEvents: ['回收作业完成。动力核心恢复 25%。', ...state.recentEvents].slice(0, 4)
+      recentEvents: ['回收作业完成。动力核心恢复 30%。', ...state.recentEvents].slice(0, 4)
     });
   }
 }
