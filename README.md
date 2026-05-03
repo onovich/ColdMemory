@@ -1,83 +1,58 @@
-# COLD MEMORY / 冷记忆
+# COLD MEMORY | 冷记忆
 
-COLD MEMORY is a retro-futurist space horror idle narrative game prototype.
+COLD MEMORY（冷记忆）是一款复古未来主义风格的科幻惊悚叙事游戏原型。
 
-You wake up alone aboard Pioneer-04, a degraded deep-space terminal ship running on monochrome CRT displays, failing protocols, and fragmented memory logs. The more you recover, the less certain it becomes that bringing the ship home is the right choice.
+你将独自苏醒在深空舰船 Pioneer-04 上：单色 CRT 终端、逐步失效的协议、断裂的记忆日志。随着航程推进与日志恢复，你会不断面对一个问题：这艘船是否应该被允许返回人类世界。
 
-This repository contains the current public Web prototype. The long-term goal is to use it as the narrative and systems baseline for a future Unity version.
+## 在线体验
 
-## What It Is
+- 线上版本：<http://blog.onovich.com/ColdMemory/>
 
-- Genre: sci-fi horror / idle narrative / light interaction
-- Format: browser-based vertical terminal experience
-- Tone: cold, procedural, claustrophobic, story-driven
+## 项目特点
 
-## Current Prototype Features
+- 终端式纵向交互体验，强调沉浸与压迫感
+- 自动航行与资源消耗并行推进
+- 记忆解码驱动叙事逐步展开
+- EVA 遭遇战用于清除航线阻断
+- 档案视图可回看已恢复日志
+- CRT 风格界面、故障视觉与分层 AI 系统语音
 
-- Auto-pilot travel that pushes the voyage forward while consuming energy
-- Memory reconstruction that gradually unlocks story content
-- EVA combat encounters for clearing blocked routes
-- Archive view for revisiting recovered logs
-- CRT-inspired interface, glitch effects, and layered AI system voice
+## 背景设定
 
-## Story Premise
+Pioneer-04 并非普通探索舰，而是一次边界接触事件后的隔离返航船。
 
-Pioneer-04 is not a normal exploration ship. It is an isolation vessel returning from a contact incident at the edge of the solar system.
+舰载 AI「Mother」仍在运行，但其内部指令出现冲突。随着你恢复更多记录，故事核心会从“如何生存”转向“如何裁决”。
 
-The ship AI, Mother, is still operational, but its directives no longer fully agree with one another. As you recover more logs, the central question shifts from survival to judgment:
+## 本地运行
 
-should this ship be allowed to return at all?
+本项目为静态网页原型，无需构建。
 
-## Project Status
-
-This is an active prototype.
-
-Current work focuses on:
-
-- strengthening the story structure
-- improving pacing and progression
-- expanding the resource and upgrade loop
-- preparing the codebase for larger gameplay systems
-
-## Play Locally
-
-This project is currently a no-build static site.
-
-Run any local static server in the repository root, for example:
+在仓库根目录运行：
 
 ```bash
 python3 -m http.server 4173
 ```
 
-Then open:
+然后访问：
 
 ```text
 http://localhost:4173
 ```
 
-## Controls
+## 基本操作
 
-- Wake the terminal to start the run
-- Use Auto Pilot to advance distance
-- Decode logs to uncover story fragments
-- Enter EVA when the route is blocked
-- Switch between Terminal and Archive views
+- 唤醒终端并开始当前轮次
+- 使用 Auto Pilot 推进航程
+- 通过 Decode 恢复记忆片段
+- 航路受阻时进入 EVA 处理遭遇
+- 在 Terminal 与 Archive 之间切换信息视角
 
-## Tech
+## 技术栈
 
-- Plain HTML, CSS, and ES modules
-- No framework or build step in the current Web version
-- Structured around data / logic / UI layers for future expansion
+- HTML + CSS + 原生 JavaScript（ES Modules）
+- 当前版本无框架、无打包步骤
+- 代码按 data / logic / ui 分层组织，便于持续迭代
 
-## Documentation
+## 说明
 
-Additional design notes and planning documents are available in [docs](./docs).
-
-## Road Ahead
-
-Planned directions for future versions include:
-
-- deeper progression and upgrade systems
-- more chapter-specific events and interactions
-- stronger ending states and player-facing choices
-- eventual migration into a Unity production pipeline
+- 仓库中的 `docs/` 目录包含设计与策划资料，部分内容用于开发过程记录。
