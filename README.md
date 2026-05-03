@@ -1,47 +1,83 @@
 # COLD MEMORY / 冷记忆
 
-COLD MEMORY 是一个太空惊悚题材的放置点击游戏原型。当前仓库提供一个可以直接部署到 GitHub Pages 的静态 Web 版本，后续会以此为基础移植到 Unity。
+COLD MEMORY is a retro-futurist space horror idle narrative game prototype.
 
-## 当前玩法原型
+You wake up alone aboard Pioneer-04, a degraded deep-space terminal ship running on monochrome CRT displays, failing protocols, and fragmented memory logs. The more you recover, the less certain it becomes that bringing the ship home is the right choice.
 
-- 自动巡航：持续推进航程并消耗能源。
-- 记忆解析：点击恢复章节文本，逐步拼出叙事真相。
-- EVA 清障：通过轻量射击清理残骸，解除剧情阻塞或回收能源。
-- 章节推进：航程、文本解锁和 EVA 作业共同组成主循环。
+This repository contains the current public Web prototype. The long-term goal is to use it as the narrative and systems baseline for a future Unity version.
 
-## 项目结构
+## What It Is
 
-```text
-.
-├── docs/
-│   ├── GAME_DESIGN.md
-│   ├── PROJECT_REVIEW.md
-│   └── ROADMAP.md
-├── src/
-│   ├── data/
-│   ├── logic/
-│   └── ui/
-├── index.html
-├── index.js
-└── styles.css
-```
+- Genre: sci-fi horror / idle narrative / light interaction
+- Format: browser-based vertical terminal experience
+- Tone: cold, procedural, claustrophobic, story-driven
 
-## 本地运行
+## Current Prototype Features
 
-这是一个无构建依赖的静态项目，可直接用任意静态服务器运行，例如：
+- Auto-pilot travel that pushes the voyage forward while consuming energy
+- Memory reconstruction that gradually unlocks story content
+- EVA combat encounters for clearing blocked routes
+- Archive view for revisiting recovered logs
+- CRT-inspired interface, glitch effects, and layered AI system voice
+
+## Story Premise
+
+Pioneer-04 is not a normal exploration ship. It is an isolation vessel returning from a contact incident at the edge of the solar system.
+
+The ship AI, Mother, is still operational, but its directives no longer fully agree with one another. As you recover more logs, the central question shifts from survival to judgment:
+
+should this ship be allowed to return at all?
+
+## Project Status
+
+This is an active prototype.
+
+Current work focuses on:
+
+- strengthening the story structure
+- improving pacing and progression
+- expanding the resource and upgrade loop
+- preparing the codebase for larger gameplay systems
+
+## Play Locally
+
+This project is currently a no-build static site.
+
+Run any local static server in the repository root, for example:
 
 ```bash
 python3 -m http.server 4173
 ```
 
-然后访问 `http://localhost:4173`。
+Then open:
 
-## GitHub Pages
+```text
+http://localhost:4173
+```
 
-仓库已按静态站点结构整理。推送到 GitHub 后，可在仓库设置中将 GitHub Pages 指向默认分支根目录。
+## Controls
 
-## 后续方向
+- Wake the terminal to start the run
+- Use Auto Pilot to advance distance
+- Decode logs to uncover story fragments
+- Enter EVA when the route is blocked
+- Switch between Terminal and Archive views
 
-- 扩展资源系统、事件系统和长期成长数值。
-- 将章节脚本升级为可配置的内容管线。
-- 将当前 Web 原型整理为 Unity 中的 UI 流程、状态机和配置表。
+## Tech
+
+- Plain HTML, CSS, and ES modules
+- No framework or build step in the current Web version
+- Structured around data / logic / UI layers for future expansion
+
+## Documentation
+
+Additional design notes and planning documents are available in [docs](./docs).
+
+## Road Ahead
+
+Planned directions for future versions include:
+
+- deeper progression and upgrade systems
+- more chapter-specific events and interactions
+- stronger ending states and player-facing choices
+- eventual migration into a Unity production pipeline

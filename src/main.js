@@ -25,7 +25,7 @@ export function bootstrapColdMemory(root) {
 
     shooter = new DebrisShooter({
       mountNode,
-      targetHits: viewModel.blocked ? viewModel.stage.combatClearTarget : 5,
+      targetHits: viewModel.blocked ? viewModel.criticalBattle.targetHits : 5,
       combatMode: viewModel.blocked,
       onComplete: () => {
         if (shooter) {
@@ -68,6 +68,21 @@ export function bootstrapColdMemory(root) {
         break;
       case 'toggle-view':
         controller.toggleView();
+        break;
+      case 'unlock-critical-evidence':
+        controller.unlockCriticalWithEvidence();
+        break;
+      case 'unlock-critical-points':
+        controller.unlockCriticalWithPoints();
+        break;
+      case 'advance-stage':
+        controller.advanceStage();
+        break;
+      case 'purchase-upgrade':
+        controller.purchaseUpgrade(actionTarget.dataset.upgradeId);
+        break;
+      case 'choose-ending':
+        controller.chooseEnding(actionTarget.dataset.endingId);
         break;
       case 'close-eva':
         controller.closeEva();
