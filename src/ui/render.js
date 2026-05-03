@@ -207,9 +207,9 @@ function renderDecodePanel(state, viewModel) {
       <div class="cm-decode-panel">
         <div class="cm-decode-panel__header">
           <span><span class="cm-spinner">${icon('loader', 'spin')}</span>数据同步中...</span>
-          <span>${Math.floor(getDecodeRatio(state))}%</span>
+          <span data-decode-progress-label>${Math.floor(getDecodeRatio(state))}%</span>
         </div>
-        <div class="cm-progress"><span style="width:${getDecodeRatio(state)}%"></span></div>
+        <div class="cm-progress"><span data-decode-progress-bar style="width:${getDecodeRatio(state)}%"></span></div>
       </div>
     `;
   }
@@ -311,19 +311,19 @@ function renderActiveScreen(state, viewModel) {
       <div class="cm-status__top">
         <div>
           <div class="cm-status__label">距离目标</div>
-          <div class="cm-status__value">${Math.floor(state.distance)} <span>KM</span></div>
+          <div class="cm-status__value"><span data-distance-number>${Math.floor(state.distance)}</span> <span>KM</span></div>
         </div>
         <div class="cm-status__right">
           <div class="cm-status__label">核心能级</div>
-          <div class="cm-status__value">${Math.floor(state.energy)}%</div>
+          <div class="cm-status__value"><span data-energy-number>${Math.floor(state.energy)}</span>%</div>
         </div>
       </div>
-      <div class="cm-energy-bar"><span style="width:${state.energy}%"></span></div>
+      <div class="cm-energy-bar"><span data-energy-bar style="width:${state.energy}%"></span></div>
       <div class="cm-status__hint">${icon('loader', state.gameState === 'AUTO_PILOT' ? 'spin' : '')}母亲指令: ${viewModel.motherHint}</div>
       <div class="cm-status__economy">
-        <div class="cm-economy-chip"><strong>${state.points}</strong><span>记忆点</span></div>
-        <div class="cm-economy-chip"><strong>${state.evidence}</strong><span>关键证词</span></div>
-        <div class="cm-economy-chip"><strong>${viewModel.autoPointRate.total.toFixed(2)}</strong><span>点/秒</span></div>
+        <div class="cm-economy-chip"><strong data-points-value>${state.points}</strong><span>记忆点</span></div>
+        <div class="cm-economy-chip"><strong data-evidence-value>${state.evidence}</strong><span>关键证词</span></div>
+        <div class="cm-economy-chip"><strong data-rate-value>${viewModel.autoPointRate.total.toFixed(2)}</strong><span>点/秒</span></div>
       </div>
     </div>
 
@@ -358,8 +358,8 @@ function renderModal(state, viewModel) {
 
 export function renderApp(root, state, viewModel) {
   root.innerHTML = `
-    <main class="cm-shell ${state.glitch ? 'cm-shell--glitch' : ''}">
-      <section class="cm-device ${state.glitch ? 'cm-device--glitch' : ''}">
+    <main class="cm-shell ${state.glitch ? 'cm-shell--glitch' : ''}" data-shell>
+      <section class="cm-device ${state.glitch ? 'cm-device--glitch' : ''}" data-device>
         <div class="cm-crt-lines"></div>
         <div class="cm-crt-vignette"></div>
         ${state.gameState === 'BOOT' ? renderBootScreen() : renderActiveScreen(state, viewModel)}

@@ -5,6 +5,90 @@ import { DebrisShooter } from './ui/shooter.js';
 export function bootstrapColdMemory(root) {
   const controller = new GameController();
   let shooter = null;
+  let previousState = null;
+  let previousViewModel = null;
+
+  function createStructuralSnapshot(state, viewModel) {
+    return {
+      gameState: state.gameState,
+      currentView: state.currentView,
+      stageIndex: state.stageIndex,
+      revealedNormalNodes: state.revealedNormalNodes,
+      criticalUnlocked: state.criticalUnlocked,
+      battleCleared: state.battleCleared,
+      isDecoding: state.isDecoding,
+      isEvaOpen: state.isEvaOpen,
+      points: state.points,
+      evidence: state.evidence,
+      upgrades: JSON.stringify(state.upgrades),
+      recentEvents: state.recentEvents.join('|'),
+      endingState: state.endingState,
+      blocked: viewModel.blocked,
+      canDecode: viewModel.canDecode,
+      canUnlockCriticalWithEvidence: viewModel.canUnlockCriticalWithEvidence,
+      canUnlockCriticalWithPoints: viewModel.canUnlockCriticalWithPoints,
+      motherHint: viewModel.motherHint
+    };
+  }
+
+  function shouldFullRender(state, viewModel) {
+    if (!previousState || !previousViewModel) {
+      return true;
+    }
+
+    const previousSnapshot = createStructuralSnapshot(previousState, previousViewModel);
+    const currentSnapshot = createStructuralSnapshot(state, viewModel);
+    return Object.keys(currentSnapshot).some((key) => currentSnapshot[key] !== previousSnapshot[key]);
+  }
+
+  function patchLiveRegions(state, viewModel) {
+    const shell = root.querySelector('[data-shell]');
+    const device = root.querySelector('[data-device]');
+    shell?.classList.toggle('cm-shell--glitch', state.glitch);
+    device?.classList.toggle('cm-device--glitch', state.glitch);
+
+    const distanceNode = root.querySelector('[data-distance-number]');
+    if (distanceNode) {
+      distanceNode.textContent = String(Math.floor(state.distance));
+    }
+
+    const energyNode = root.querySelector('[data-energy-number]');
+    if (energyNode) {
+      energyNode.textContent = String(Math.floor(state.energy));
+    }
+
+    const energyBar = root.querySelector('[data-energy-bar]');
+    if (energyBar) {
+      energyBar.style.width = `${state.energy}%`;
+    }
+
+    const pointsNode = root.querySelector('[data-points-value]');
+    if (pointsNode) {
+      pointsNode.textContent = String(state.points);
+    }
+
+    const evidenceNode = root.querySelector('[data-evidence-value]');
+    if (evidenceNode) {
+      evidenceNode.textContent = String(state.evidence);
+    }
+
+    const rateNode = root.querySelector('[data-rate-value]');
+    if (rateNode) {
+      rateNode.textContent = viewModel.autoPointRate.total.toFixed(2);
+    }
+
+    if (state.isDecoding) {
+      const progressLabel = root.querySelector('[data-decode-progress-label]');
+      if (progressLabel) {
+        progressLabel.textContent = `${Math.floor(state.decodeProgress)}%`;
+      }
+
+      const progressBar = root.querySelector('[data-decode-progress-bar]');
+      if (progressBar) {
+        progressBar.style.width = `${state.decodeProgress}%`;
+      }
+    }
+  }
 
   function syncShooter() {
     if (shooter) {
@@ -40,8 +124,15 @@ export function bootstrapColdMemory(root) {
   function render() {
     const state = controller.getState();
     const viewModel = controller.getViewModel();
-    renderApp(root, state, viewModel);
-    syncShooter();
+    if (shouldFullRender(state, viewModel)) {
+      renderApp(root, state, viewModel);
+      syncShooter();
+    } else {
+      patchLiveRegions(state, viewModel);
+    }
+
+    previousState = structuredClone(state);
+    previousViewModel = structuredClone(viewModel);
   }
 
   root.addEventListener('click', (event) => {
