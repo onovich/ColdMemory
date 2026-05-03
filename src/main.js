@@ -1,4 +1,5 @@
 import { GameController } from './logic/game-controller.js';
+import { UPGRADE_CONFIG, getNextUpgradeLevel } from './data/upgrades.js';
 import { renderApp } from './ui/render.js';
 import { DebrisShooter } from './ui/shooter.js';
 
@@ -7,6 +8,24 @@ export function bootstrapColdMemory(root) {
   let shooter = null;
   let previousState = null;
   let previousViewModel = null;
+
+  function createUpgradeAffordabilitySignature(state) {
+    return UPGRADE_CONFIG
+      .filter((upgrade) => state.stageIndex + 1 >= upgrade.unlockStage)
+      .map((upgrade) => {
+        const nextLevel = getNextUpgradeLevel(state, upgrade.id);
+        if (!upgrade.implemented) {
+          return `${upgrade.id}:planned`;
+        }
+
+        if (!nextLevel) {
+          return `${upgrade.id}:max`;
+        }
+
+        return `${upgrade.id}:${state.points >= nextLevel.cost}`;
+      })
+      .join('|');
+  }
 
   function createStructuralSnapshot(state, viewModel) {
     return {
@@ -18,9 +37,8 @@ export function bootstrapColdMemory(root) {
       battleCleared: state.battleCleared,
       isDecoding: state.isDecoding,
       isEvaOpen: state.isEvaOpen,
-      points: state.points,
-      evidence: state.evidence,
       upgrades: JSON.stringify(state.upgrades),
+      upgradeAffordability: createUpgradeAffordabilitySignature(state),
       recentEvents: state.recentEvents.join('|'),
       endingState: state.endingState,
       blocked: viewModel.blocked,
