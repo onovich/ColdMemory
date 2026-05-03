@@ -15,8 +15,34 @@ export function bootstrapColdMemory(root) {
       return;
     }
 
+    terminalScroll.scrollTop = terminalScroll.scrollHeight;
+
     window.requestAnimationFrame(() => {
-      terminalScroll.scrollTo({ top: terminalScroll.scrollHeight, behavior: 'auto' });
+      window.requestAnimationFrame(() => {
+        terminalScroll.scrollTo({ top: terminalScroll.scrollHeight, behavior: 'auto' });
+        window.setTimeout(() => {
+          terminalScroll.scrollTop = terminalScroll.scrollHeight;
+        }, 0);
+      });
+    });
+  }
+
+  function restoreTerminalScroll(scrollSnapshot) {
+    const terminalScroll = root.querySelector('[data-terminal-scroll]');
+    if (!terminalScroll || !scrollSnapshot) {
+      return;
+    }
+
+    const targetTop = Math.max(0, terminalScroll.scrollHeight - terminalScroll.clientHeight - scrollSnapshot.distanceFromBottom);
+    terminalScroll.scrollTop = targetTop;
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        terminalScroll.scrollTo({ top: targetTop, behavior: 'auto' });
+        window.setTimeout(() => {
+          terminalScroll.scrollTop = targetTop;
+        }, 0);
+      });
     });
   }
 
@@ -151,19 +177,31 @@ export function bootstrapColdMemory(root) {
   }
 
   function render() {
+    const previousTerminalScrollNode = root.querySelector('[data-terminal-scroll]');
+    const previousTerminalScroll = previousTerminalScrollNode
+      ? {
+          scrollTop: previousTerminalScrollNode.scrollTop,
+          distanceFromBottom: previousTerminalScrollNode.scrollHeight - previousTerminalScrollNode.clientHeight - previousTerminalScrollNode.scrollTop
+        }
+      : null;
+
     const state = controller.getState();
     const viewModel = controller.getViewModel();
     const shouldStickTerminalToBottom = !previousState
+      || previousState.gameState !== state.gameState
       || previousState.currentView !== state.currentView
       || previousState.stageIndex !== state.stageIndex
       || previousState.revealedNormalNodes !== state.revealedNormalNodes
-      || previousState.criticalUnlocked !== state.criticalUnlocked;
+      || previousState.criticalUnlocked !== state.criticalUnlocked
+      || previousState.isDecoding !== state.isDecoding;
 
     if (shouldFullRender(state, viewModel)) {
       renderApp(root, state, viewModel);
       syncShooter();
       if (shouldStickTerminalToBottom) {
         syncTerminalScroll(state);
+      } else if (previousState?.currentView === 'TERMINAL' && state.currentView === 'TERMINAL') {
+        restoreTerminalScroll(previousTerminalScroll);
       }
     } else {
       patchLiveRegions(state, viewModel);
