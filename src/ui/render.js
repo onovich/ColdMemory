@@ -2,10 +2,12 @@ import { STORY_STAGES } from '../data/stages.js';
 import { getDecodeRatio } from '../logic/progression.js';
 
 function icon(name, className = '') {
-  const common = `class="icon ${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"`;
+  // Use absolute time to calculate animation delay so the spin animation remains continuous across frequent DOM replacements
+  const delay = className.includes('spin') ? `style="animation-delay: -${(Date.now() % 1000) / 1000}s"` : '';
+  const common = `class="icon ${className}" ${delay} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"`;
   const icons = {
     cpu: `<svg ${common}><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path></svg>`,
-    loader: `<svg ${common}><path d="M21 12a9 9 0 1 1-6.2-8.56"></path></svg>`,
+    loader: `<svg ${common}><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>`,
     terminal: `<svg ${common}><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>`,
     archive: `<svg ${common}><rect x="3" y="4" width="18" height="4" rx="1"></rect><path d="M5 8h14v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2Z"></path><path d="M10 12h4"></path></svg>`,
     navigation: `<svg ${common}><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>`,
@@ -57,7 +59,7 @@ function renderDecodePanel(state, viewModel) {
     return `
       <div class="cm-decode-panel">
         <div class="cm-decode-panel__header">
-          <span>${icon('loader', 'spin')}数据同步中...</span>
+          <span><span class="cm-spinner">${icon('loader', 'spin')}</span>数据同步中...</span>
           <span>${Math.floor(getDecodeRatio(state))}%</span>
         </div>
         <div class="cm-progress"><span style="width:${getDecodeRatio(state)}%"></span></div>

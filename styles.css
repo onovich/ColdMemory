@@ -350,6 +350,12 @@ canvas {
   gap: 8px;
 }
 
+.cm-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .cm-progress {
   height: 4px;
   background: rgba(74, 246, 38, 0.2);
@@ -546,6 +552,7 @@ canvas {
   width: 18px;
   height: 18px;
   flex: 0 0 auto;
+  transform-origin: center center;
 }
 
 .icon--xl {
@@ -555,6 +562,7 @@ canvas {
 
 .spin {
   animation: spin 1s linear infinite;
+  will-change: transform;
 }
 
 .pulse-soft {
